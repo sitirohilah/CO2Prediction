@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update & Preprocessing Dataset</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function showStep(step) {
+            // Sembunyikan semua langkah
+            document.getElementById('update-step').style.display = 'none';
+            document.getElementById('preprocessing-step').style.display = 'none';
+            document.getElementById('retraining-step').style.display = 'none';
+
+            // Tampilkan langkah yang dipilih
+            document.getElementById(step).style.display = 'block';
+
+            // Perbarui progress bar
+            updateProgress(step);
+        }
+
+        function updateProgress(step) {
+            let steps = ["update", "preprocessing", "retraining"];
+            steps.forEach((s, index) => {
+                let circle = document.getElementById(s + '-circle');
+                if (steps.indexOf(step.replace('-step', '')) >= index) {
+                    circle.classList.remove('bg-secondary');
+                    circle.classList.add('bg-success');
+                } else {
+                    circle.classList.remove('bg-success');
+                    circle.classList.add('bg-secondary');
+                }
+            });
+        }
+    </script>
+    <style>
+        .navbar {
+            background-color: #424E65;
+    
+        }
+        .navbar h2 {
+            color: white;
+        }
+        .navbar a{
+            color: white;
+            padding-left: 20px;
+        }
+        .dash-admin{
+            margin-top: 80px;
+        }
+        .retrain-container {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .btn-retrain {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn-retrain:hover {
+            background-color: #0056b3;
+        }
+
+        .result-box {
+            background-color: #cce5ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            color: #004085;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .result-box p{
+            font-size: medium;
+        }
+
+    </style>
+</head>
+<body onload="showStep('update-step')">
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <a href="/home">kembali</a> 
+        <div class="collapse navbar-collapse justify-content-center">
+            <h2 class="text-center">Dashboard Admin</h2>
+    </nav>
+    <section class="dash-admin">
+        <div class="container mt-4">
+            <!-- Progress Bar -->
+            <div class="d-flex justify-content-center mb-4">
+                <div class="d-flex align-items-center">
+                    <div id="update-circle" class="rounded-circle bg-secondary text-white px-3 py-1">1</div>
+                    <div class="px-2">Update Dataset</div>
+                </div>
+                <div class="mx-2">—</div>
+                <div class="d-flex align-items-center">
+                    <div id="preprocessing-circle" class="rounded-circle bg-secondary text-white px-3 py-1">2</div>
+                    <div class="px-2">Data Preprocessing</div>
+                </div>
+                <div class="mx-2">—</div>
+                <div class="d-flex align-items-center">
+                    <div id="retraining-circle" class="rounded-circle bg-secondary text-white px-3 py-1">3</div>
+                    <div class="px-2">Retraining Model</div>
+                </div>
+            </div>
+
+            <!-- 1. Update Dataset -->
+            <div id="update-step" class="card">
+                <div class="card-body">
+                    <h4 class="mb-3">1. Update Dataset</h4>
+                    <button id="update-btn" class="btn btn-primary mb-3" onclick="updateData()">🔄 Update Data</button>
+                    <p>
+                        *Jika API gagal diperbarui, admin silahkan upload data secara manual dari Excel/CSV.  
+                        Data bisa unduh <a href="https://drive.google.com/file/d/1L2xmZs58caTKy7spzX7zLEYA1r_2LCEl/view?usp=sharing">disini</a>.
+                    </p>
+                    <form id="uploadForm">
+                        <input type="file" id="fileInput" class="form-control my-2">
+                        <button type="submit" class="btn btn-warning">📂 Upload Data</button>
+                    </form>
+
+                    <h4 class="mt-4">Data Emisi CO2</h4>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Tahun</th>
+                                <th>Emisi CO2 (Juta Ton)</th>
+                                <th>Land-use Change</th>
+                                <th>Fossil Fuels</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                <td>{{ row["Year"] }}</td>
+                                <td>{{ row["emissions_total_including_land_use_change"] }}</td>
+                                <td>{{ row["emissions_from_land_use_change"] }}</td>
+                                <td>{{ row["emissions_total"] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <div class="text-end">
+                        <button class="btn btn-success" onclick="showStep('preprocessing-step')">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Data Preprocessing -->
+            <div id="preprocessing-step" class="card" style="display: none;">
+                <div class="card-body">
+                    <h4 class="mb-3">2. Data Preprocessing</h4>
+                    <p>Tahap preprocessing digunakan untuk menangani outlier dan melakukan normalisasi.</p>
+                    <button id="prepro-btn" onclick="preprocessing_data()" class="btn btn-primary mb-3">
+                        preprocessing data
+                    </button>
+
+                    <div class="row">
+                        <div class="col-md-6 text-center">
+                            <img id="before-outlier" src="" style="display: none;" alt="Boxplot Sebelum Outlier" />
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <img id="after-outlier" src="" style="display: none;" alt="Boxplot Sesudah Outlier" />
+                        </div>
+                    </div>
+
+                    <div id="result"></div>
+
+                    <div class="text-end">
+                        <button class="btn btn-secondary" onclick="showStep('update-step')">Back</button>
+                        <button class="btn btn-success" onclick="showStep('retraining-step')">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Retraining Model -->
+            <div id="retraining-step" class="card" style="display: none;">
+                <div class="card-body">
+                    <h4>3. Retraining Model</h4>
+                    <p>Klik "Retrain Model" untuk pelatihan ulang.</p>
+                    <button id="retrain-btn" onclick="startRetraining()" class="btn btn-success">
+                        🚀 Retrain Model
+                    </button>
+                    <div id="result-container" class="result-box" style="display: none;">
+                        <h4>Hasil Retraining</h4>
+                        <p><strong>MAPE:</strong> <span id="mape-value">-</span>%</p>
+                        <p>Model menunjukkan akurasi yang <strong><span id="model-category">-</span></strong></p>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-secondary" onclick="showStep('preprocessing-step')"> Back</button>
+                        <a href="/dashboard" class="btn btn-primary my-3">
+                            Done
+                        </a> 
+                    </div>
+                </div>
+            </div>
+
+        </div>
+</section>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function updateData() {
+        let button = document.getElementById("update-btn");
+        button.disabled = true;
+
+        // Kirim request ke backend Flask
+        fetch('/update-data')
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(error => {
+                statusMessage.innerText = "Gagal melakukan update data.";
+            })
+            .finally(() => {
+                button.disabled = false;
+            });
+    }
+
+    function startRetraining() {
+        let button = document.getElementById("retrain-btn");
+
+        // Simpan teks asli tombol sebelum loading
+        let originalText = button.innerHTML;
+
+        // Ganti teks tombol dengan loading spinner
+        button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> training sedang berjalan...';
+        button.disabled = true;
+
+        // Kirim request ke backend Flask
+        fetch('/retrain-model')
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                document.getElementById("mape-value").innerText = data.mape.toFixed(2);
+                document.getElementById("model-category").innerText = data.category;
+                document.getElementById("result-container").style.display = "block";
+            })
+            .catch(error => {
+                statusMessage.innerText = "Gagal melakukan retraining.";
+            })
+            .finally(() => {
+        // Kembalikan tombol ke keadaan semula setelah selesai
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+    }
+
+    function preprocessing_data() {
+    let button = document.getElementById("prepro-btn");
+    let resultContainer = document.getElementById("result");
+    let beforeOutlierImg = document.getElementById("before-outlier");
+    let afterOutlierImg = document.getElementById("after-outlier");
+    let originalText = button.innerHTML;
+
+    // Ubah tombol menjadi loading state
+    button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
+    button.disabled = true;
+
+    fetch("/preprocessing")
+        .then(response => response.json())
+        .then(data => {
+            console.log("Respons dari Flask:", data); // Debugging
+
+            if (data.data && Array.isArray(data.data)) {
+                let output = `
+                    <h2>Hasil Normalisasi</h2>
+                    <div style="overflow-x: auto;">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr style="background: #007BFF; color: white;">
+                                    <th>Year</th>
+                                    <th>Before Scaling</th>
+                                    <th>After Scaling</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+                // Menampilkan hanya 5 data pertama
+                data.data.slice(0, 5).forEach(row => {
+                    output += `
+                        <tr>
+                            <td>${row.Year}</td>
+                            <td>${row["Before Scaling"].toLocaleString()}</td>
+                            <td>${row["After Scaling"].toFixed(6)}</td>
+                        </tr>`;
+                });
+
+                output += `</tbody></table></div>`;
+
+                resultContainer.innerHTML = output;
+
+                // Set path gambar yang disimpan di static/images
+                beforeOutlierImg.src = "/static/images/boxplot_outlier_before.png";
+                afterOutlierImg.src = "/static/images/boxplot_outlier_after.png";
+
+                // Tampilkan gambar setelah preprocessing selesai
+                beforeOutlierImg.style.display = "block";
+                afterOutlierImg.style.display = "block";
+            } else {
+                resultContainer.innerHTML = "<p style='color: red;'>Data tidak ditemukan!</p>";
+            }
+        })
+        .catch(error => {
+            console.error("Terjadi error:", error);
+            resultContainer.innerHTML = "<p style='color: red;'>Gagal memuat data</p>";
+        })
+        .finally(() => {
+            // Kembalikan tombol ke semula
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+}
+
+    // Fungsi untuk mengunggah file
+    document.getElementById("uploadForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var formData = new FormData();
+        var fileInput = document.getElementById("fileInput");
+        formData.append("file", fileInput.files[0]);
+
+        fetch('/upload-data', {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        })
+        .catch(error => console.error("Error:", error));
+    });
+
+    // Fungsi untuk mengambil histori log
+    function fetchLogHistory() {
+        fetch('/log-history')
+            .then(response => response.json())
+            .then(logs => {
+                var logList = document.getElementById("logHistory");
+                logList.innerHTML = ""; // Kosongkan daftar log
+                logs.reverse().forEach(log => {
+                    var listItem = document.createElement("li");
+                    listItem.classList.add("list-group-item");
+                    listItem.textContent = `${log.timestamp} - ${log.status} (${log.source})`;
+                    logList.appendChild(listItem);
+                });
+            });
+    }
+
+    // Panggil fungsi saat halaman dimuat
+    fetchLogHistory();
+</script>
+</body>
+</html>

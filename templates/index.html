@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CO2 Emission Dashboard</title>
+    
+    <!-- Load Bootstrap, jQuery, and Plotly -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #424E65;
+        }
+        .navbar a {
+            color: white;
+        }
+
+        .hero {
+            background: url("{{ url_for('static', filename='images/BackG.png') }}") no-repeat center center;
+            background-size: cover;
+            height: 105vh;
+            display: flex;
+            align-items: center;
+            color: white;
+            text-align: left;
+            padding-left: 2%;
+        }
+        .hero h1 span {
+            color: #f6ad55;
+        }
+        .btn-explore {
+            background-color: #f6ad55;
+            color: white;
+            width: 250px;
+        }
+        .btn-explore:hover {
+            background-color: #ed8936;
+        }
+
+        .btn-explore:hover {
+            background-color: #e65a50;
+        }
+        
+
+        .predict-section {
+        padding: 20px 0;  
+        margin-top: -20px; 
+        background-color: white;
+        }
+
+        .predict-section h2 {
+            color: #f76c5e;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .predict-section p {
+            color: #6c757d;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .predict-section div {
+            max-width: 90%;
+            height: 80vh;
+            margin: auto;
+        }
+
+        .dashboard-container {
+            padding: 50px;
+            text-align: center;
+            background-color: #424E65;
+        }
+
+        .dashboard-container h1{
+            color: #f6ad55;
+            margin-bottom: 5px;
+        }
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .chart-box {
+            background: #fff;
+            padding-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: 500px;
+            margin: auto;
+        }
+
+        .chart-box2 {
+            background: #fff;
+            padding-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: 327px;
+            margin: auto;
+        }
+
+        .chart-box3 {
+            background: #fff;
+            padding-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: 150px;
+            margin: auto;
+        }
+
+        .positive {
+            color: red;
+        }
+        .negative {
+            color: green;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid">
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav" type="button">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about-us">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#predict">Predict</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#visualization">Visualization</a></li>
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+    <section id="home" class="hero container-fluid">
+        <div class="row w-100">
+         <div class="col-md-6 d-flex flex-column justify-content-center">
+          <h1 class="display-4">
+           Welcome to
+           <span>
+            CO2 
+            <br>
+            Emission
+           </span>
+           Dashboard
+          </h1>
+          <p class="lead">
+           Track, and Analyze Carbon Emission at Indonesia
+          </p>
+          <br>
+          <a href="/login" class="btn btn-explore btn-lg">
+            Predict
+        </a>        
+         </div>
+         <div class="col-md-6 d-flex justify-content-center align-items-center">
+         </div>
+        </div>
+       </div>
+    </section>
+
+    <section id="about-us" style="text-align: center; padding: 50px; background-color: #f4f4f4;">
+        <div style="max-width: 900px; margin: auto;">
+            <h2 style="color: #2c3e50; font-size: 32px; font-weight: bold;">------- About Us -------</h2>
+            <p style="color: #555; font-size: 18px; line-height: 1.6;">
+                Kami adalah platform inovatif yang memanfaatkan teknologi <strong>Deep Learning</strong> untuk memprediksi <strong>emisi CO₂</strong> Indonesia di masa depan berdasarkan data historis.
+                Dengan pendekatan berbasis data dan model <strong>Long Short-Term Memory (LSTM)</strong>, kami menghadirkan dashboard interaktif mengenai tren emisi karbon di Indonesia, 
+                untuk membantu pengambilan kebijakan, kebutuhan penelitian, dan membantu masyarakat memahami dinamika perubahan emisi dari waktu ke waktu. 
+            </p>
+
+            <p style="color: #555; font-size: 18px; line-height: 1.6;">
+                Melalui dashboard interaktif ini, pengguna dapat memvisualisasikan pola historis, memprediksi tren emisi di masa depan, 
+                dan memperoleh data yang dapat diandalkan untuk penelitian maupun kebijakan. Kami percaya bahwa dengan memanfaatkan 
+                teknologi dan data secara optimal, kita dapat berkontribusi dalam menciptakan masa depan yang lebih hijau dan berkelanjutan 
+                bagi Indonesia.
+            </p>
+        </div>
+    </section>
+    
+
+    <section id="predict" class="predict-section">
+        <div class="col-md-8 mb-4">
+            <h2>Prediksi</h2>
+            <p>Prediksi Emisi Co2 di Indonesia</p>
+            <iframe src="{{ url_for('static', filename='predict_line.html') }}" width="100%" height="500px" style="border: none;"></iframe>
+        </div>
+    </section>
+
+
+        <!-- Visualization Section -->
+    <section id="visualization" class="dashboard-container">
+        <h1 class="text-center mb-4">DASHBOARD EMISI CO2</h1>
+        <div class="row">
+            <div class="col-md-8 mb-4">
+                <div class="chart-box">
+                    <h3 class="text-center">Tren Emisi CO₂ di Indonesia</h3>
+                    <iframe src="{{ url_for('static', filename='line_chart.html') }}" width="100%" height="450px" style="border: none;"></iframe>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="chart-box3">
+                            <h6 class="text-center">Growt Emission Status</h6>
+                            <br>
+                            <h4><strong><span class="{% if '+' in status.growth_total %}positive{% else %}negative{% endif %}">
+                                {{ status.growth_total }}
+                            </span></strong></h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="chart-box3">
+                            <h6 class="text-center">Growt Land-use Status</h6>
+                            <br>
+                            <h4><strong><span class="{% if '+' in status.growth_land_use %}positive{% else %}negative{% endif %}">
+                                {{ status.growth_land_use }}
+                            </span></strong></h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="chart-box3">
+                            <h6 class="text-center">Growt Fossil Fuel Status</h6>
+                            <br>
+                            <h4><strong><span class="{% if '+' in status.growth_fossil %}positive{% else %}negative{% endif %}">
+                                {{ status.growth_fossil }}
+                            </span></strong></h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="chart-box2">
+                        <h4 class="text-center">10 Negara Dengan Emisi Terbanyak</h4>
+                        <iframe src="{{ url_for('static', filename='bar_chart_5.html') }}" width="100%" height="300px" style="border: none;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="chart-box">
+                    <h5 class="text-center">10 Negara Land-use Tertinggi</h5>
+                    <iframe src="{{ url_for('static', filename='bar_chart_land.html') }}" width="100%" height="450px" style="border: none;"></iframe>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="chart-box">
+                    <h5 class="text-center">10 Negara Fossil Fuels Terbanyak</h5>
+                    <iframe src="{{ url_for('static', filename='bar_chart_fossil.html') }}" width="100%" height="450px" style="border: none;"></iframe>
+                </div>
+            </div>
+            <div class="col-md-5 mb-4">
+                <div class="chart-box">
+                    <iframe src="{{ url_for('static', filename='map.html') }}" width="100%" height="450px" style="border: none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
